@@ -11,7 +11,7 @@ const ORG_LABEL: Record<Org, string> = {
   credit_deployment: "Credit Deployment"
 };
 const ORG_BADGE: Record<Org, string> = {
-  astra: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+  astra: "bg-neutral-400/10 text-neutral-200 border-neutral-500/40",
   clear_nexus: "bg-teal-500/15 text-teal-300 border-teal-500/30",
   credit_deployment: "bg-amber-500/15 text-amber-300 border-amber-500/30"
 };
@@ -22,6 +22,7 @@ type Me = {
   org: Org;
   can_view_all: boolean;   // sees every team's users
   can_manage_org: boolean; // issues OTPs / signs out anyone in its own team
+  view_orgs: Org[];        // extra teams it can see (read-only), on top of its own
   display_name: string | null;
 };
 
@@ -66,35 +67,52 @@ function LoginScreen() {
     if (err) setError(err.message);
   }
 
+  const inputCls =
+    "w-full bg-neutral-950 border border-neutral-800 text-white rounded-lg px-3 py-2.5 text-sm " +
+    "placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-colors";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 p-7 rounded-2xl shadow-xl w-80 space-y-4">
-        <div>
-          <div className="text-xs font-semibold tracking-widest text-slate-500 uppercase mb-1">CDS Notification Centre</div>
-          <h1 className="text-white text-lg font-bold">Supervisor Sign-in</h1>
+    <div className="min-h-screen flex items-center justify-center bg-neutral-950 px-4 py-10">
+      <div className="w-full max-w-sm">
+        <div className="rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 shadow-2xl shadow-black/60">
+          {/* Co-branding: built by Astra Global for Credit Deployment. Both logos
+              have dark lettering, so they sit on a light strip. */}
+          <div className="bg-white px-6 py-5 flex items-center justify-center gap-5">
+            <img src="/brand/astra-logo.png" alt="Astra Global" className="h-14 w-auto" />
+            <span className="h-10 w-px bg-neutral-200" aria-hidden="true" />
+            <img src="/brand/cds-logo.png" alt="Credit Deployment" className="h-14 w-auto" />
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-7 space-y-4">
+            <div className="pb-1">
+              <div className="text-[11px] font-semibold tracking-[0.2em] text-neutral-500 uppercase mb-1.5">CDS Notification Centre</div>
+              <h1 className="text-white text-xl font-semibold tracking-tight">Supervisor sign-in</h1>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-400 mb-1.5">Email</label>
+              <input
+                className={inputCls} placeholder="you@company.com"
+                type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-400 mb-1.5">Password</label>
+              <input
+                className={inputCls}
+                type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required
+              />
+            </div>
+            {error && <p className="text-red-400 text-xs">{error}</p>}
+            <button
+              className="w-full bg-white hover:bg-neutral-200 disabled:bg-neutral-800 disabled:text-neutral-500 text-neutral-950 font-semibold py-2.5 rounded-lg text-sm transition-colors"
+              disabled={loading}
+            >
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
         </div>
-        <div>
-          <label className="block text-xs text-slate-400 mb-1">Email</label>
-          <input
-            className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
-            type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-slate-400 mb-1">Password</label>
-          <input
-            className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
-            type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required
-          />
-        </div>
-        {error && <p className="text-red-400 text-xs">{error}</p>}
-        <button
-          className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
-          disabled={loading}
-        >
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
+        <p className="mt-5 text-center text-xs text-neutral-600">Developed by Astra Global for Credit Deployment</p>
+      </div>
     </div>
   );
 }
@@ -103,15 +121,15 @@ function LoginScreen() {
 
 function NotSetUp({ email }: { email: string }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <div className="bg-slate-900 border border-slate-800 p-7 rounded-2xl shadow-xl w-96 space-y-4 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-950">
+      <div className="bg-neutral-900 border border-neutral-800 p-7 rounded-2xl shadow-xl w-96 space-y-4 text-center">
         <h1 className="text-white text-lg font-bold">No dashboard access</h1>
-        <p className="text-sm text-slate-400">
-          <span className="font-mono text-slate-300">{email}</span> isn&apos;t assigned to a team on this dashboard.
+        <p className="text-sm text-neutral-400">
+          <span className="font-mono text-neutral-300">{email}</span> isn&apos;t assigned to a team on this dashboard.
           Ask an administrator to add it.
         </p>
         <button
-          className="text-sm text-slate-300 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+          className="text-sm text-neutral-300 hover:text-white border border-neutral-700 px-3 py-1.5 rounded-lg hover:bg-neutral-800 transition-colors"
           onClick={() => supabase.auth.signOut()}
         >
           Sign out
@@ -210,33 +228,41 @@ function Dashboard({ me }: { me: Me }) {
     load();
   }
 
-  const shown       = me.can_view_all && teamFilter !== "all" ? users.filter(u => u.org === teamFilter) : users;
+  // Teams this login can see; more than one gets the team filter and Team column.
+  const visibleOrgs = me.can_view_all
+    ? ORGS
+    : ORGS.filter(o => o === me.org || (me.view_orgs ?? []).includes(o));
+  const multiTeam   = visibleOrgs.length > 1;
+  const shown       = multiTeam && teamFilter !== "all" ? users.filter(u => u.org === teamFilter) : users;
   const onlineCount = shown.filter(isOnline).length;
-  const scopeLabel  = me.can_view_all ? "All Teams" : ORG_LABEL[me.org];
+  const scopeLabel  = me.can_view_all ? "All Teams" : visibleOrgs.map(o => ORG_LABEL[o]).join(" & ");
   const myName      = me.display_name || nameFromEmail(me.email);
-  const showTeamCol = me.can_view_all;
+  const showTeamCol = multiTeam;
+  const myRole      = [
+    ORG_LABEL[me.org],
+    me.can_view_all ? "All teams" : multiTeam ? "Multi-team view" : null,
+    me.can_manage_org ? "Supervisor" : "Own OTP only"
+  ].filter(Boolean).join(" · ");
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
+    <div className="min-h-screen bg-neutral-950 p-6">
       <div className="max-w-6xl mx-auto space-y-5">
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-white">{scopeLabel} — Access Control</h1>
-            <p className="text-sm text-slate-400 mt-0.5">
+            <p className="text-sm text-neutral-400 mt-0.5">
               <span className="text-emerald-400 font-semibold">{onlineCount}</span> of {shown.length} users online
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <div className="text-sm text-white font-medium">{myName}</div>
-              <div className="text-xs text-slate-500">
-                {ORG_LABEL[me.org]} · {me.can_manage_org ? "Supervisor" : me.can_view_all ? "All-teams view" : "Self only"}
-              </div>
+              <div className="text-xs text-neutral-500">{myRole}</div>
             </div>
             <button
-              className="text-sm text-slate-400 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+              className="text-sm text-neutral-400 hover:text-white border border-neutral-700 px-3 py-1.5 rounded-lg hover:bg-neutral-800 transition-colors"
               onClick={() => supabase.auth.signOut()}
             >
               Sign out
@@ -244,10 +270,10 @@ function Dashboard({ me }: { me: Me }) {
           </div>
         </div>
 
-        {/* Team filter — only for logins that see every team */}
-        {me.can_view_all && (
+        {/* Team filter — only for logins that see more than one team */}
+        {multiTeam && (
           <div className="flex flex-wrap gap-2">
-            {(["all", ...ORGS] as const).map(key => {
+            {(["all", ...visibleOrgs] as const).map(key => {
               const inTeam = key === "all" ? users : users.filter(u => u.org === key);
               const active = teamFilter === key;
               return (
@@ -255,11 +281,11 @@ function Dashboard({ me }: { me: Me }) {
                   key={key}
                   onClick={() => setTeamFilter(key)}
                   className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${active
-                    ? "bg-slate-800 border-slate-600 text-white"
-                    : "border-slate-800 text-slate-400 hover:text-white hover:bg-slate-900"}`}
+                    ? "bg-neutral-800 border-neutral-600 text-white"
+                    : "border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-900"}`}
                 >
                   {key === "all" ? "All teams" : ORG_LABEL[key]}
-                  <span className="ml-2 text-xs text-slate-500">
+                  <span className="ml-2 text-xs text-neutral-500">
                     <span className="text-emerald-400">{inTeam.filter(isOnline).length}</span>/{inTeam.length}
                   </span>
                 </button>
@@ -269,16 +295,16 @@ function Dashboard({ me }: { me: Me }) {
         )}
 
         {/* Action bar */}
-        <div className="bg-slate-900 rounded-xl border border-slate-800 shadow-sm p-4 flex flex-wrap gap-3 items-center">
+        <div className="bg-neutral-900 rounded-xl border border-neutral-800 shadow-sm p-4 flex flex-wrap gap-3 items-center">
           {selfOnly ? (
-            <div className="text-sm text-slate-300 min-w-64">
+            <div className="text-sm text-neutral-300 min-w-64">
               {issuable.length
-                ? <>Your extension OTP: <span className="font-mono text-slate-400">{issuable[0].email}</span></>
-                : <span className="text-slate-500">Your account has no extension access.</span>}
+                ? <>Your extension OTP: <span className="font-mono text-neutral-400">{issuable[0].email}</span></>
+                : <span className="text-neutral-500">Your account has no extension access.</span>}
             </div>
           ) : (
             <select
-              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 min-w-64"
+              className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-neutral-500 min-w-64"
               value={pickEmail}
               onChange={e => { setPickEmail(e.target.value); setGenerated(null); }}
             >
@@ -294,7 +320,7 @@ function Dashboard({ me }: { me: Me }) {
           <button
             disabled={!pickEmail || busy}
             onClick={generateOtp}
-            className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+            className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-800 disabled:text-neutral-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
           >
             {selfOnly ? "Generate My OTP" : "Generate Daily OTP"}
           </button>
@@ -303,7 +329,7 @@ function Dashboard({ me }: { me: Me }) {
             <button
               disabled={busy}
               onClick={resetAll}
-              className="ml-auto bg-red-600 hover:bg-red-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+              className="ml-auto bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
             >
               Reset All {ORG_LABEL[me.org]} Sessions
             </button>
@@ -336,10 +362,10 @@ function Dashboard({ me }: { me: Me }) {
         )}
 
         {/* User table */}
-        <div className="bg-slate-900 rounded-xl border border-slate-800 shadow-sm overflow-hidden">
+        <div className="bg-neutral-900 rounded-xl border border-neutral-800 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-slate-800/70 border-b border-slate-800 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+              <tr className="bg-neutral-800/70 border-b border-neutral-800 text-neutral-400 text-xs font-semibold uppercase tracking-wider">
                 <th className="px-4 py-3 text-left w-12">Status</th>
                 <th className="px-4 py-3 text-left">Name</th>
                 {showTeamCol && <th className="px-4 py-3 text-left">Team</th>}
@@ -348,22 +374,22 @@ function Dashboard({ me }: { me: Me }) {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-neutral-800">
               {shown.map(u => {
                 const lp     = u.last_ping ? new Date(u.last_ping) : null;
                 const online = isOnline(u);
                 return (
-                  <tr key={u.email} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={u.email} className="hover:bg-neutral-800/40 transition-colors">
                     <td className="px-4 py-3">
                       <span
                         title={online ? "Online" : "Offline"}
-                        className={`inline-block w-3 h-3 rounded-full ${online ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-slate-600"}`}
+                        className={`inline-block w-3 h-3 rounded-full ${online ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-neutral-600"}`}
                       />
                     </td>
                     <td className="px-4 py-3 font-medium text-white">
                       {nameOf(u.email)}
                       {u.role === "supervisor" && (
-                        <span className="ml-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border border-slate-700 rounded px-1.5 py-0.5">
+                        <span className="ml-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-400 border border-neutral-700 rounded px-1.5 py-0.5">
                           Supervisor
                         </span>
                       )}
@@ -380,11 +406,11 @@ function Dashboard({ me }: { me: Me }) {
                         </span>
                       </td>
                     )}
-                    <td className="px-4 py-3 font-mono text-slate-400 text-xs">
+                    <td className="px-4 py-3 font-mono text-neutral-400 text-xs">
                       {u.email}
                     </td>
-                    <td className="px-4 py-3 text-slate-400">
-                      {lp ? lp.toLocaleString() : <span className="text-slate-600">—</span>}
+                    <td className="px-4 py-3 text-neutral-400">
+                      {lp ? lp.toLocaleString() : <span className="text-neutral-600">—</span>}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {u.can_manage ? (
@@ -397,12 +423,12 @@ function Dashboard({ me }: { me: Me }) {
                           className="text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors
                             bg-red-600/15 border-red-700/40 text-red-300
                             hover:bg-red-600/30 hover:text-white hover:border-red-500
-                            disabled:bg-slate-800/40 disabled:border-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed"
+                            disabled:bg-neutral-800/40 disabled:border-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed"
                         >
                           Sign out
                         </button>
                       ) : (
-                        <span className="text-xs text-slate-600">View only</span>
+                        <span className="text-xs text-neutral-600">View only</span>
                       )}
                     </td>
                   </tr>
@@ -410,7 +436,7 @@ function Dashboard({ me }: { me: Me }) {
               })}
               {shown.length === 0 && (
                 <tr>
-                  <td colSpan={showTeamCol ? 6 : 5} className="px-4 py-8 text-center text-slate-500 text-sm">
+                  <td colSpan={showTeamCol ? 6 : 5} className="px-4 py-8 text-center text-neutral-500 text-sm">
                     No users to show.
                   </td>
                 </tr>
@@ -448,8 +474,8 @@ export default function Page() {
 
   if (authEmail === undefined || (authEmail && me === undefined)) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-500 text-sm">Loading…</div>
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+        <div className="text-neutral-500 text-sm">Loading…</div>
       </div>
     );
   }
